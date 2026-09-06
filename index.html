@@ -126,8 +126,38 @@
       font-weight: 700;
       letter-spacing: 0.02em;
       cursor: pointer;
+      transition: background 0.22s ease, color 0.22s ease;
     }
-    td button:hover, td button:focus-visible { background: var(--ink); color: #fff; }
+    td button:hover, td button:focus-visible, td.open > button { background: var(--ink); color: #fff; }
+    .pick {
+      display: grid;
+      grid-template-rows: 0fr;
+      margin-top: 0;
+      opacity: 0;
+      text-align: left;
+      pointer-events: none;
+      transition: grid-template-rows 0.32s ease, opacity 0.24s ease, margin-top 0.32s ease, transform 0.32s ease;
+    }
+    .pick-in { overflow: hidden; min-height: 0; }
+    .open > .pick {
+      grid-template-rows: 1fr;
+      margin-top: 4px;
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .pick a {
+      display: block;
+      border: 0;
+      border-radius: 4px;
+      padding: 3px 4px;
+      background: none;
+      color: var(--ink);
+      font-size: 11px;
+      font-weight: 650;
+      line-height: 1.3;
+      text-decoration: none;
+    }
+    .pick a:hover, .pick a:focus-visible { background: var(--wash); }
     td small {
       display: block;
       margin-top: 4px;
@@ -141,12 +171,43 @@
       padding-top: 0;
       gap: 3px;
     }
-    .classes a {
+    .classes .chip { position: relative; }
+    .classes button {
+      appearance: none;
       min-width: 0;
+      border: 1px solid var(--ink);
+      background: #fff;
+      color: var(--ink);
+      border-radius: 999px;
       padding: 1px 6px;
+      font: inherit;
       font-size: 12px;
       line-height: 1.3;
       text-align: center;
+      cursor: pointer;
+    }
+    .classes button { transition: background 0.22s ease, color 0.22s ease; }
+    .classes .chip.open > button { background: var(--ink); color: #fff; }
+    .classes .pick {
+      position: absolute;
+      left: 0;
+      top: 100%;
+      z-index: 2;
+      min-width: 9.5em;
+      margin-top: 0;
+      padding: 0 2px;
+      background: #fff;
+      border: 1px solid transparent;
+      transform: translateY(-4px);
+    }
+    .classes .chip.open > .pick {
+      margin-top: 2px;
+      padding: 2px;
+      border-color: var(--line);
+      transform: none;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      td button, .classes button, .pick { transition: none; }
     }
 
     #back {
@@ -159,7 +220,45 @@
       text-decoration: none;
       cursor: pointer;
     }
-    #class-page[hidden], main[hidden], .days[hidden], .classes[hidden], #weeks[hidden], #back[hidden], #class-pick[hidden] { display: none; }
+    #class-page[hidden], main[hidden], .days[hidden], .classes[hidden], #weeks[hidden], #back[hidden], #class-pick[hidden], #hello[hidden] { display: none; }
+
+    #hello {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.72);
+    }
+    #hello div {
+      max-width: 22em;
+      padding: 16px 16px 12px;
+      background: #fff;
+      border: 1px solid var(--line);
+    }
+    #hello p { margin: 0 0 8px; }
+    #hello-time {
+      margin: 0 0 12px;
+      font-size: 28px;
+      font-weight: 650;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.04em;
+      line-height: 1.2;
+    }
+    #hello-time[hidden] { display: none; }
+    #hello button {
+      appearance: none;
+      border: 1px solid var(--ink);
+      background: var(--ink);
+      color: #fff;
+      border-radius: 999px;
+      padding: 5px 14px;
+      font: inherit;
+      font-size: 13px;
+      cursor: pointer;
+    }
 
     #photos {
       display: grid;
@@ -247,8 +346,7 @@
       <a href="#b" id="link-b">Week B</a>
     </nav>
     <nav id="class-pick" hidden>
-      <a id="pick-list">Class list</a>
-      <a id="pick-room" hidden target="_blank" rel="noopener">Google Classroom</a>
+      <a id="pick-room" hidden target="_blank" rel="noopener">GoogleClassroom</a>
     </nav>
   </header>
 
@@ -260,11 +358,22 @@
     <ol id="photos"></ol>
   </section>
 
+  <div id="hello" hidden>
+    <div>
+      <p id="hello-text"></p>
+      <p id="hello-time" hidden></p>
+      <button type="button" id="hello-ok">OK</button>
+    </div>
+  </div>
+
   <script src="classes.js"></script>
   <script>
     const IMG = "images/";
     const DOC = "https://docs.google.com/document/d/1iiptvZl5o9lI2E7PPfiTqL39MNSafXNklrajUkv0shw/edit?tab=t.0";
-    const LINKS = { "DEAR time": "https://dear-time.netlify.app/" };
+    const LINKS = {
+      "DEAR time": "https://dear-time.netlify.app/",
+      "Flag-raising": "https://us02web.zoom.us/j/83329409406?pwd=qWY6KmEgAW7ItCVKDzpYOW6OBbyHbw.1"
+    };
     const ROOMS = {
       "7AJ": "https://classroom.google.com/u/8/c/ODc2NzUzODYyNjk3",
       "9GK": "https://classroom.google.com/u/8/c/ODc3MjY0OTY3NDM2",
@@ -293,26 +402,28 @@
     ];
     const WEEK = {
       a: {
-        hr:    ["Homeroom time", "DEAR time", "Homeroom time", "Homeroom time", "Flag-raising"],
+        hr:    ["Homeroom Duty", "Homeroom Duty", "Homeroom Duty", "Homeroom Duty", "Homeroom Duty"],
+        hrNote:["", "DEAR time", "", "", "Flag-raising"],
         l1:    ["8EJ", "8CW", "", "", "7NS"],
         l2:    ["7KS", "", "", "", "5MA"],
         l3:    ["8CW", "", "", "9RR", "5MA"],
         rec:   ["", "", "", "", ""],
         l4:    ["6SR", "6YS", "", "", ""],
-        l5:    ["6SR", "6YS", "Duty 7/F", "", ""],
+        l5:    ["6SR", "6YS", "7/F Duty", "", ""],
         l5Note:["", "", "12:15–12:45", "", ""],
         lunch: ["", "", "", "", ""],
         lrec:  ["", "", "", "", ""],
         l6:    ["9GK", "", "", "8AJ", "8AJ"],
-        l7:    ["", "7NR", "Homeroom Time", "7AL", ""],
+        l7:    ["", "7NR", "Homeroom Duty", "7AL", ""],
         l8:    ["9SV", "9RR", "", "", ""],
         l8Note:["", "", "Early release / CCA", "", ""],
-        end:   ["Homeroom time", "Homeroom time", "", "Homeroom time", "Homeroom time"],
+        end:   ["Homeroom Duty", "Homeroom Duty", "", "Homeroom Duty", "Homeroom Duty"],
         late:  ["", "", "", "", "New Wing Duty"],
         lateNote:["", "", "", "", "4–7/F"]
       },
       b: {
-        hr:    ["Homeroom time", "DEAR time", "Homeroom time", "Homeroom time", "Flag-raising"],
+        hr:    ["Homeroom Duty", "Homeroom Duty", "Homeroom Duty", "Homeroom Duty", "Homeroom Duty"],
+        hrNote:["", "DEAR time", "", "", "Flag-raising"],
         l1:    ["", "", "", "", "8JE"],
         l1Note:["", "", "", "Chapel", ""],
         l2:    ["", "", "", "", ""],
@@ -320,13 +431,13 @@
         rec:   ["", "", "", "", ""],
         l4:    ["9PS", "", "", "8JE", "4IR"],
         l5:    ["7NR", "", "", "", "4IR"],
-        lunch: ["Duty Astro Turf", "", "", "", "Duty 7/F"],
+        lunch: ["Astro Turf Duty", "", "", "", "7/F Duty"],
         lrec:  ["", "", "", "", ""],
         l6:    ["7AJ", "", "", "9PS", ""],
-        l7:    ["", "", "Homeroom Time", "", ""],
+        l7:    ["", "", "Homeroom Duty", "", ""],
         l8:    ["8EJ", "7AJ", "", "9GK", ""],
         l8Note:["", "", "Early release / CCA", "", ""],
-        end:   ["Homeroom time", "Homeroom time", "", "Homeroom time", "Homeroom time"],
+        end:   ["Homeroom Duty", "Homeroom Duty", "", "Homeroom Duty", "Homeroom Duty"],
         late:  ["", "", "", "", ""]
       }
     };
@@ -338,7 +449,6 @@
     const back = document.getElementById("back");
     const weeksNav = document.getElementById("weeks");
     const classPick = document.getElementById("class-pick");
-    const pickList = document.getElementById("pick-list");
     const pickRoom = document.getElementById("pick-room");
     const headTitle = document.getElementById("head-title");
     const meta = document.getElementById("meta");
@@ -378,14 +488,48 @@
       return "";
     }
 
+    function closePicks(except) {
+      document.querySelectorAll(".open").forEach(el => {
+        if (el !== except) el.classList.remove("open");
+      });
+    }
+
+    function attachPick(host, code, trigger) {
+      const pick = document.createElement("div");
+      pick.className = "pick";
+      const inner = document.createElement("div");
+      inner.className = "pick-in";
+      if (CLASSES[code]) {
+        const a = document.createElement("a");
+        a.href = "#" + code + "-list";
+        a.textContent = "ClassList";
+        inner.append(a);
+      }
+      if (ROOMS[code]) {
+        const a = document.createElement("a");
+        a.href = ROOMS[code];
+        a.target = "_blank";
+        a.rel = "noopener";
+        a.textContent = "GoogleClassroom";
+        inner.append(a);
+      }
+      pick.append(inner);
+      trigger.addEventListener("click", e => {
+        e.stopPropagation();
+        const open = host.classList.contains("open");
+        closePicks();
+        if (!open) host.classList.add("open");
+      });
+      host.append(trigger, pick);
+    }
+
     function cell(code, note) {
       const td = document.createElement("td");
-      if (isClass(code)) {
+      if (isClass(code) || ROOMS[code]) {
         const btn = document.createElement("button");
         btn.type = "button";
         btn.textContent = code;
-        btn.addEventListener("click", () => { location.hash = code; });
-        td.append(btn);
+        attachPick(td, code, btn);
       } else if (LINKS[code]) {
         const a = document.createElement("a");
         a.className = "note";
@@ -402,7 +546,17 @@
       }
       if (note) {
         const small = document.createElement("small");
-        small.textContent = note;
+        if (LINKS[note]) {
+          const a = document.createElement("a");
+          a.className = "note";
+          a.href = LINKS[note];
+          a.target = "_blank";
+          a.rel = "noopener";
+          a.textContent = note;
+          small.append(a);
+        } else {
+          small.textContent = note;
+        }
         td.append(small);
       }
       return td;
@@ -507,16 +661,13 @@
       weeksNav.hidden = true;
       back.hidden = false;
       back.href = "#" + week;
-      classPick.hidden = false;
+      classPick.hidden = !ROOMS[code];
       headTitle.removeAttribute("href");
       headTitle.removeAttribute("target");
       headTitle.textContent = code;
       meta.hidden = false;
       const cls = CLASSES[code];
       meta.textContent = cls ? cls.when : "";
-      pickList.hidden = !cls;
-      pickList.href = "#" + code + "-list";
-      pickList.className = "";
       if (ROOMS[code]) {
         pickRoom.hidden = false;
         pickRoom.href = ROOMS[code];
@@ -530,31 +681,20 @@
       classIndex.replaceChildren();
       const codes = [...new Set([...Object.keys(CLASSES), ...Object.keys(ROOMS)])];
       codes.sort((a, b) => a.localeCompare(b, undefined, { numeric: true })).forEach(code => {
-        const a = document.createElement("a");
-        a.href = "#" + code;
-        a.textContent = code;
-        classIndex.append(a);
+        const chip = document.createElement("span");
+        chip.className = "chip";
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.textContent = code;
+        attachPick(chip, code, btn);
+        classIndex.append(chip);
       });
-    }
-
-    function showPick(code) {
-      if (!CLASSES[code] && !ROOMS[code]) return showWeek(week);
-      showPhotos = false;
-      photoTyped = "";
-      openClass = "";
-      setClassHead(code);
-      classPage.hidden = true;
-      document.getElementById("photos").replaceChildren();
-      document.getElementById("link-a").className = "";
-      document.getElementById("link-b").className = "";
-      window.scrollTo(0, 0);
     }
 
     function showClass(code) {
       const cls = CLASSES[code];
-      if (!cls) return showPick(code);
+      if (!cls) return showWeek(week);
       setClassHead(code);
-      pickList.className = "on";
       classPage.hidden = false;
       const present = cls.students.filter(s => s.img).length;
       meta.textContent = cls.when + " · " + present + " students";
@@ -613,16 +753,139 @@
       renderTable();
     }
 
-    function currentWeekLetter() {
+    function weekLetterFor(date) {
       const origin = Date.UTC(2026, 8, 7);
-      const now = new Date();
-      const dow = now.getDay();
-      let monday = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+      const dow = date.getDay();
+      let monday = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
       if (dow === 0) monday += 86400000;
       else if (dow === 6) monday += 2 * 86400000;
       else monday -= (dow - 1) * 86400000;
       const weeks = Math.floor((monday - origin) / (7 * 86400000));
       return ((weeks % 2) + 2) % 2 === 0 ? "a" : "b";
+    }
+
+    function currentWeekLetter() {
+      return weekLetterFor(new Date());
+    }
+
+    function eventKind(code) {
+      if (!code) return "";
+      if (/duty/i.test(code)) return "duty";
+      if (CLASSES[code] || ROOMS[code]) return "lesson";
+      return "";
+    }
+
+    function dayBands(date) {
+      const wed = date.getDay() === 3;
+      return [
+        ["hr", 8 * 60 + 30, 9 * 60],
+        ["l1", 9 * 60, 9 * 60 + 40],
+        ["l2", 9 * 60 + 40, 10 * 60 + 20],
+        ["l3", 10 * 60 + 20, 11 * 60],
+        ["rec", 11 * 60, 11 * 60 + 15],
+        ["l4", 11 * 60 + 15, 11 * 60 + 55],
+        ["l5", 11 * 60 + 55, wed ? 12 * 60 + 15 : 12 * 60 + 35],
+        ["lunch", wed ? 12 * 60 + 15 : 12 * 60 + 35, 13 * 60 + 5],
+        ["lrec", 13 * 60 + 5, 13 * 60 + 35],
+        ["l6", 13 * 60 + 35, 14 * 60 + 15],
+        ["l7", 14 * 60 + 15, 14 * 60 + 55],
+        ["l8", 14 * 60 + 55, 15 * 60 + 35],
+        ["end", 15 * 60 + 35, 15 * 60 + 45],
+        ["late", 15 * 60 + 45, 16 * 60]
+      ];
+    }
+
+    function atMins(date, mins) {
+      return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, mins, 0, 0);
+    }
+
+    function noteTimes(note) {
+      const m = String(note || "").match(/^(\d{1,2}):(\d{2})–(\d{1,2}):(\d{2})$/);
+      if (!m) return null;
+      return [Number(m[1]) * 60 + Number(m[2]), Number(m[3]) * 60 + Number(m[4])];
+    }
+
+    function eventsOn(date) {
+      const col = date.getDay() - 1;
+      if (col < 0 || col > 4) return [];
+      const data = WEEK[weekLetterFor(date)];
+      const list = [];
+      dayBands(date).forEach(([id, start, end]) => {
+        const code = (data[id] || [])[col] || "";
+        const kind = eventKind(code);
+        if (!kind) return;
+        const note = (data[id + "Note"] || [])[col] || "";
+        const times = noteTimes(note);
+        const from = times ? times[0] : start;
+        const to = times ? times[1] : end;
+        const ev = { name: code, kind, start: atMins(date, from), end: atMins(date, to) };
+        const last = list[list.length - 1];
+        if (last && last.name === ev.name && last.kind === ev.kind && last.end.getTime() === ev.start.getTime()) {
+          last.end = ev.end;
+        } else {
+          list.push(ev);
+        }
+      });
+      return list;
+    }
+
+    function upcoming(now) {
+      const events = [];
+      for (let i = 0; i < 14; i++) {
+        const day = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i);
+        events.push(...eventsOn(day));
+      }
+      const current = events.find(ev => now >= ev.start && now < ev.end);
+      const next = events.find(ev => ev.start > now);
+      return { current, next };
+    }
+
+    function clockText(ms) {
+      const total = Math.max(0, Math.floor(ms / 1000));
+      const days = Math.floor(total / 86400);
+      const hours = Math.floor((total % 86400) / 3600);
+      const mins = Math.floor((total % 3600) / 60);
+      const secs = total % 60;
+      const pad = n => String(n).padStart(2, "0");
+      const clock = pad(hours) + ":" + pad(mins) + ":" + pad(secs);
+      return days ? days + (days === 1 ? " day " : " days ") + clock : clock;
+    }
+
+    let helloTick = 0;
+
+    function paintHello() {
+      const now = new Date();
+      const { current, next } = upcoming(now);
+      const text = document.getElementById("hello-text");
+      const time = document.getElementById("hello-time");
+      if (current) {
+        text.textContent = "Good day Mr Ken, your " + current.kind + " will end in";
+        time.hidden = false;
+        time.textContent = clockText(current.end - now);
+        return;
+      }
+      if (next) {
+        text.textContent = "Good day Mr Ken, your " + next.name + " will start in";
+        time.hidden = false;
+        time.textContent = clockText(next.start - now);
+        return;
+      }
+      text.textContent = "Good day Mr Ken.";
+      time.hidden = true;
+      time.textContent = "";
+    }
+
+    function hideHello() {
+      document.getElementById("hello").hidden = true;
+      clearInterval(helloTick);
+      helloTick = 0;
+    }
+
+    function showHello() {
+      document.getElementById("hello").hidden = false;
+      paintHello();
+      clearInterval(helloTick);
+      helloTick = setInterval(paintHello, 1000);
     }
 
     function route() {
@@ -632,21 +895,29 @@
         showClass(list[1].toUpperCase());
         return;
       }
-      const code = rawHash.toUpperCase();
-      if (CLASSES[code] || ROOMS[code]) {
-        showPick(code);
-        return;
-      }
       const raw = rawHash.toLowerCase();
       if (raw === "a" || raw === "b") showWeek(raw);
       else showWeek(currentWeekLetter());
     }
 
+    document.getElementById("hello-ok").addEventListener("click", hideHello);
+    document.getElementById("hello").addEventListener("click", e => {
+      if (e.target.id === "hello") hideHello();
+    });
     document.getElementById("link-a").addEventListener("click", () => { week = "a"; });
     document.getElementById("link-b").addEventListener("click", () => { week = "b"; });
+    document.addEventListener("click", () => closePicks());
     window.addEventListener("hashchange", route);
     window.addEventListener("keydown", e => {
-      if (e.key === "Escape" && (!classPage.hidden || !classPick.hidden)) {
+      if (e.key === "Escape" && !document.getElementById("hello").hidden) {
+        hideHello();
+        return;
+      }
+      if (e.key === "Escape" && document.querySelector(".open")) {
+        closePicks();
+        return;
+      }
+      if (e.key === "Escape" && !classPage.hidden) {
         location.hash = week;
         return;
       }
@@ -676,6 +947,7 @@
     } else {
       route();
     }
+    showHello();
   </script>
 </body>
 </html>
