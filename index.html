@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kenneth's timetable 2026/27</title>
+  <style>
+    :root {
+      --ink: #161616;
+      --muted: #6a6a6a;
+      --line: #e4e4e4;
+      --wash: #f4f4f4;
+      --card: #efefef;
+    }
+
+    * { box-sizing: border-box; }
+    html { color-scheme: light; }
+    body {
+      margin: 0 auto;
+      max-width: 1100px;
+      padding: 10px 12px 40px;
+      color: var(--ink);
+      background: #fff;
+      font: 15px/1.35 "Segoe UI", system-ui, sans-serif;
+    }
+
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px 12px;
+      margin: 0 0 8px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--line);
+    }
+    header p {
+      margin: 0;
+      flex: 1 1 auto;
+      min-width: 0;
+      font-size: 12px;
+      line-height: 1.3;
+      color: var(--muted);
+    }
+    #head-title {
+      color: var(--ink);
+      font-weight: 650;
+      text-decoration: none;
+    }
+    #head-title[href]:hover, a.note:hover { text-decoration: underline; }
+    a.note { color: inherit; text-decoration: none; }
+    #meta { font-size: 12px; color: var(--muted); }
+    #meta[hidden] { display: none; }
+
+    nav { display: flex; flex-wrap: wrap; gap: 6px; }
+    header nav { flex: 0 0 auto; }
+    nav a, nav button {
+      appearance: none;
+      border: 1px solid var(--ink);
+      background: #fff;
+      color: var(--ink);
+      border-radius: 999px;
+      padding: 4px 10px;
+      font: inherit;
+      font-size: 13px;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    nav a.on, nav button.on {
+      background: var(--ink);
+      color: #fff;
+    }
+
+    .days { margin: 0 0 8px; }
+    @media (min-width: 800px) {
+      .days { display: none; }
+    }
+
+    main { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 640px;
+    }
+    th, td {
+      border-bottom: 1px solid var(--line);
+      padding: 5px 4px;
+      text-align: center;
+      vertical-align: middle;
+    }
+    thead th {
+      padding: 1px 4px;
+      font-size: 11px;
+      font-weight: 600;
+      line-height: 1.15;
+      color: var(--muted);
+    }
+    tbody th {
+      width: 92px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 13px;
+      white-space: nowrap;
+      position: sticky;
+      left: 0;
+      background: #fff;
+    }
+    tbody th small {
+      display: block;
+      font-weight: 400;
+      color: var(--muted);
+    }
+    tr.break th, tr.break td { background: var(--wash); }
+    tr.break th { background: var(--wash); }
+    tr.now th { box-shadow: inset 3px 0 0 var(--ink); }
+
+    td button {
+      appearance: none;
+      width: 100%;
+      min-height: 36px;
+      border: 0;
+      border-radius: 8px;
+      background: var(--card);
+      color: var(--ink);
+      font: inherit;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+    }
+    td button:hover, td button:focus-visible { background: var(--ink); color: #fff; }
+    td small {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+    .note { color: var(--muted); font-size: 13px; }
+
+    .classes {
+      margin-top: 8px;
+      padding-top: 0;
+      gap: 3px;
+    }
+    .classes a {
+      min-width: 0;
+      padding: 1px 6px;
+      font-size: 12px;
+      line-height: 1.3;
+      text-align: center;
+    }
+
+    #back {
+      border: 0;
+      background: none;
+      padding: 0;
+      margin: 0;
+      font-size: 18px;
+      line-height: 1;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    #class-page[hidden], main[hidden], .days[hidden], .classes[hidden], #weeks[hidden], #back[hidden] { display: none; }
+
+    #photos {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    #photos li {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      min-height: 72px;
+      background: var(--wash);
+      border: 1px solid var(--line);
+    }
+    #photos li.empty { background: #fafafa; }
+    #photos img {
+      display: block;
+      width: 100%;
+      height: auto;
+      flex: 1 1 auto;
+    }
+    #photos b {
+      position: absolute;
+      top: 0;
+      right: 0;
+      min-width: 1em;
+      padding: 0 3px;
+      margin: 0;
+      background: #fff;
+      border: 0;
+      border-left: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      font-size: 9px;
+      font-weight: 700;
+      line-height: 1.2;
+      text-align: center;
+    }
+    #photos input {
+      display: block;
+      width: 100%;
+      margin-top: auto;
+      border: 0;
+      border-top: 1px solid var(--line);
+      padding: 2px 4px;
+      background: #fff;
+      font: inherit;
+      font-size: 11px;
+      line-height: 1.25;
+    }
+
+    @media (max-width: 799px) {
+      table { min-width: 0; }
+      body.filter-1 table .d2,
+      body.filter-1 table .d3,
+      body.filter-1 table .d4,
+      body.filter-1 table .d5,
+      body.filter-2 table .d1,
+      body.filter-2 table .d3,
+      body.filter-2 table .d4,
+      body.filter-2 table .d5,
+      body.filter-3 table .d1,
+      body.filter-3 table .d2,
+      body.filter-3 table .d4,
+      body.filter-3 table .d5,
+      body.filter-4 table .d1,
+      body.filter-4 table .d2,
+      body.filter-4 table .d3,
+      body.filter-4 table .d5,
+      body.filter-5 table .d1,
+      body.filter-5 table .d2,
+      body.filter-5 table .d3,
+      body.filter-5 table .d4 { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="#a" id="back" hidden title="Timetable">🕒</a>
+    <p><a id="head-title" href="https://docs.google.com/document/d/1iiptvZl5o9lI2E7PPfiTqL39MNSafXNklrajUkv0shw/edit?tab=t.0" target="_blank" rel="noopener">Kenneth's timetable 2026/27</a> <span id="meta" hidden></span></p>
+    <nav class="weeks" id="weeks" aria-label="Week">
+      <a href="#a" id="link-a">Week A</a>
+      <a href="#b" id="link-b">Week B</a>
+    </nav>
+  </header>
+
+  <nav class="days" id="days" aria-label="Day"></nav>
+  <main id="board"></main>
+  <nav class="classes" id="class-index" aria-label="Classes"></nav>
+
+  <section id="class-page" hidden>
+    <ol id="photos"></ol>
+  </section>
+
+  <script src="classes.js"></script>
+  <script>
+    const IMG = "images/";
+    const DOC = "https://docs.google.com/document/d/1iiptvZl5o9lI2E7PPfiTqL39MNSafXNklrajUkv0shw/edit?tab=t.0";
+    const LINKS = { "DEAR time": "https://dear-time.netlify.app/" };
+    const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri"];
+    const ROWS = [
+      ["hr", "08:30–09:00", ""],
+      ["l1", "L1", "09:00–09:40"],
+      ["l2", "L2", "09:40–10:20"],
+      ["l3", "L3", "10:20–11:00"],
+      ["rec", "11:00–11:15", ""],
+      ["l4", "L4", "11:15–11:55"],
+      ["l5", "L5", "11:55–12:35"],
+      ["lunch", "12:35–13:05", ""],
+      ["lrec", "13:05–13:35", ""],
+      ["l6", "L6", "13:35–14:15"],
+      ["l7", "L7", "14:15–14:55"],
+      ["l8", "L8", "14:55–15:35"],
+      ["end", "15:35–15:45", ""],
+      ["late", "15:45–16:00", ""]
+    ];
+    const WEEK = {
+      a: {
+        hr:    ["Homeroom time", "DEAR time", "Homeroom time", "Homeroom time", "Flag-raising"],
+        l1:    ["8EJ", "8CW", "", "", "7NS"],
+        l2:    ["7KS", "", "", "", "5MA"],
+        l3:    ["8CW", "", "", "9RR", "5MA"],
+        rec:   ["", "", "", "", ""],
+        l4:    ["6SR", "6YS", "", "", ""],
+        l5:    ["6SR", "6YS", "Duty 7/F", "", ""],
+        l5Note:["", "", "12:15–12:45", "", ""],
+        lunch: ["", "", "", "", ""],
+        lrec:  ["", "", "", "", ""],
+        l6:    ["9GK", "", "", "8AJ", "8AJ"],
+        l7:    ["", "7NR", "Homeroom Time", "7AL", ""],
+        l8:    ["9SV", "9RR", "", "", ""],
+        l8Note:["", "", "Early release / CCA", "", ""],
+        end:   ["Homeroom time", "Homeroom time", "", "Homeroom time", "Homeroom time"],
+        late:  ["", "", "", "", "New Wing Duty"],
+        lateNote:["", "", "", "", "4–7/F"]
+      },
+      b: {
+        hr:    ["Homeroom time", "DEAR time", "Homeroom time", "Homeroom time", "Flag-raising"],
+        l1:    ["", "", "", "", "8JE"],
+        l1Note:["", "", "", "Chapel", ""],
+        l2:    ["", "", "", "", ""],
+        l3:    ["7AL", "9SV", "", "", ""],
+        rec:   ["", "", "", "", ""],
+        l4:    ["9PS", "", "", "8JE", "4IR"],
+        l5:    ["7NR", "", "", "", "4IR"],
+        lunch: ["Duty Astro Turf", "", "", "", "Duty 7/F"],
+        lrec:  ["", "", "", "", ""],
+        l6:    ["7AJ", "", "", "9PS", ""],
+        l7:    ["", "", "Homeroom Time", "", ""],
+        l8:    ["8EJ", "7AJ", "", "9GK", ""],
+        l8Note:["", "", "Early release / CCA", "", ""],
+        end:   ["Homeroom time", "Homeroom time", "", "Homeroom time", "Homeroom time"],
+        late:  ["", "", "", "", ""]
+      }
+    };
+
+    const board = document.getElementById("board");
+    const classPage = document.getElementById("class-page");
+    const classIndex = document.getElementById("class-index");
+    const daysNav = document.getElementById("days");
+    const back = document.getElementById("back");
+    const weeksNav = document.getElementById("weeks");
+    const headTitle = document.getElementById("head-title");
+    const meta = document.getElementById("meta");
+    let week = "a";
+    let dayFilter = 0;
+
+    function isClass(code) {
+      return Boolean(code && CLASSES[code]);
+    }
+
+    function periodKey() {
+      const now = new Date();
+      const mins = now.getHours() * 60 + now.getMinutes();
+      const wed = now.getDay() === 3;
+      const bands = [
+        ["hr", 8 * 60 + 30, 9 * 60],
+        ["l1", 9 * 60, 9 * 60 + 40],
+        ["l2", 9 * 60 + 40, 10 * 60 + 20],
+        ["l3", 10 * 60 + 20, 11 * 60],
+        ["rec", 11 * 60, 11 * 60 + 15],
+        ["l4", 11 * 60 + 15, 11 * 60 + 55],
+        ["l5", 11 * 60 + 55, wed ? 12 * 60 + 15 : 12 * 60 + 35],
+        ["lunch", wed ? 12 * 60 + 15 : 12 * 60 + 35, 13 * 60 + 5],
+        ["lrec", 13 * 60 + 5, 13 * 60 + 35],
+        ["l6", 13 * 60 + 35, 14 * 60 + 15],
+        ["l7", 14 * 60 + 15, 14 * 60 + 55],
+        ["l8", 14 * 60 + 55, 15 * 60 + 35],
+        ["end", 15 * 60 + 35, 15 * 60 + 45],
+        ["late", 15 * 60 + 45, 16 * 60]
+      ];
+      for (const [id, start, end] of bands) {
+        if (mins >= start && mins < end) return id;
+      }
+      return "";
+    }
+
+    function cell(code, note) {
+      const td = document.createElement("td");
+      if (isClass(code)) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.textContent = code;
+        btn.addEventListener("click", () => { location.hash = code; });
+        td.append(btn);
+      } else if (LINKS[code]) {
+        const a = document.createElement("a");
+        a.className = "note";
+        a.href = LINKS[code];
+        a.target = "_blank";
+        a.rel = "noopener";
+        a.textContent = code;
+        td.append(a);
+      } else if (code) {
+        const span = document.createElement("span");
+        span.className = "note";
+        span.textContent = code;
+        td.append(span);
+      }
+      if (note) {
+        const small = document.createElement("small");
+        small.textContent = note;
+        td.append(small);
+      }
+      return td;
+    }
+
+    function renderTable() {
+      const data = WEEK[week];
+      const nowRow = periodKey();
+      const today = new Date().getDay();
+      let html = "<table><thead><tr><th scope='col'>Period</th>";
+      DAYS.forEach((d, i) => {
+        const mark = today === i + 1 ? " on" : "";
+        html += "<th scope='col' class='d" + (i + 1) + mark + "'>" + d + "</th>";
+      });
+      html += "</tr></thead><tbody></tbody></table>";
+      board.innerHTML = html;
+      const tbody = board.querySelector("tbody");
+
+      ROWS.forEach(([id, label, time, kind]) => {
+        const codes = data[id] || ["", "", "", "", ""];
+        const notes = data[id + "Note"] || ["", "", "", "", ""];
+        if (id === "late" && codes.every(c => !c) && notes.every(n => !n)) return;
+        const tr = document.createElement("tr");
+        if (kind === "break") tr.className = "break";
+        if (id === nowRow) tr.classList.add("now");
+        const th = document.createElement("th");
+        th.scope = "row";
+        th.append(label);
+        if (time) {
+          const t = document.createElement("small");
+          t.textContent = time;
+          th.append(t);
+        }
+        tr.append(th);
+        codes.forEach((code, i) => {
+          if (week === "a" && id === "lunch" && i === 2) return;
+          const td = cell(code, notes[i]);
+          td.className = "d" + (i + 1);
+          if (week === "a" && id === "l5" && i === 2) td.rowSpan = 2;
+          tr.append(td);
+        });
+        tbody.append(tr);
+      });
+    }
+
+    function renderDays() {
+      daysNav.replaceChildren();
+      const all = document.createElement("button");
+      all.type = "button";
+      all.textContent = "All";
+      all.className = dayFilter === 0 ? "on" : "";
+      all.addEventListener("click", () => setDay(0));
+      daysNav.append(all);
+      DAYS.forEach((d, i) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.textContent = d;
+        btn.className = dayFilter === i + 1 ? "on" : "";
+        btn.addEventListener("click", () => setDay(i + 1));
+        daysNav.append(btn);
+      });
+    }
+
+    function setDay(n) {
+      dayFilter = n;
+      bodyFilter();
+      renderDays();
+    }
+
+    function bodyFilter() {
+      document.body.className = document.body.className
+        .split(/\s+/)
+        .filter(c => c && !c.startsWith("filter-"))
+        .join(" ");
+      if (dayFilter) document.body.classList.add("filter-" + dayFilter);
+    }
+
+    function nickKey(code, n) {
+      return code + ":" + n;
+    }
+
+    function loadNicks() {
+      try {
+        return JSON.parse(localStorage.getItem("nicks") || "{}");
+      } catch (e) {
+        return {};
+      }
+    }
+
+    function saveNick(code, n, value) {
+      const all = loadNicks();
+      const key = nickKey(code, n);
+      if (value.trim()) all[key] = value;
+      else delete all[key];
+      localStorage.setItem("nicks", JSON.stringify(all));
+    }
+
+    function renderIndex() {
+      classIndex.replaceChildren();
+      Object.keys(CLASSES).sort((a, b) => a.localeCompare(b, undefined, { numeric: true })).forEach(code => {
+        const a = document.createElement("a");
+        a.href = "#" + code;
+        a.textContent = code;
+        classIndex.append(a);
+      });
+    }
+
+    function showClass(code) {
+      const cls = CLASSES[code];
+      if (!cls) return showWeek(week);
+      board.hidden = true;
+      daysNav.hidden = true;
+      classIndex.hidden = true;
+      classPage.hidden = false;
+      weeksNav.hidden = true;
+      back.hidden = false;
+      back.href = "#" + week;
+      headTitle.removeAttribute("href");
+      headTitle.removeAttribute("target");
+      headTitle.textContent = code;
+      meta.hidden = false;
+      const present = cls.students.filter(s => s.img).length;
+      meta.textContent = cls.when + " · " + present + " students";
+      const photos = document.getElementById("photos");
+      const nicks = loadNicks();
+      photos.replaceChildren();
+      cls.students.forEach(s => {
+        const li = document.createElement("li");
+        const num = document.createElement("b");
+        num.textContent = s.n;
+        if (s.img) {
+          const img = document.createElement("img");
+          img.src = IMG + s.img;
+          img.alt = code + " " + s.n;
+          img.loading = "lazy";
+          li.append(img);
+        } else {
+          li.className = "empty";
+        }
+        const nick = document.createElement("input");
+        nick.type = "text";
+        nick.autocomplete = "off";
+        nick.spellcheck = false;
+        nick.value = nicks[nickKey(code, s.n)] || "";
+        nick.addEventListener("input", () => saveNick(code, s.n, nick.value));
+        li.append(num);
+        li.append(nick);
+        photos.append(li);
+      });
+      document.getElementById("link-a").className = "";
+      document.getElementById("link-b").className = "";
+      window.scrollTo(0, 0);
+    }
+
+    function showWeek(which) {
+      week = which === "b" ? "b" : "a";
+      board.hidden = false;
+      daysNav.hidden = false;
+      classIndex.hidden = false;
+      classPage.hidden = true;
+      weeksNav.hidden = false;
+      back.hidden = true;
+      headTitle.href = DOC;
+      headTitle.target = "_blank";
+      headTitle.rel = "noopener";
+      headTitle.textContent = "Kenneth's timetable 2026/27";
+      meta.hidden = true;
+      meta.textContent = "";
+      document.getElementById("link-a").className = week === "a" ? "on" : "";
+      document.getElementById("link-b").className = week === "b" ? "on" : "";
+      renderTable();
+    }
+
+    function currentWeekLetter() {
+      const origin = Date.UTC(2026, 8, 7);
+      const now = new Date();
+      const dow = now.getDay();
+      let monday = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+      if (dow === 0) monday += 86400000;
+      else if (dow === 6) monday += 2 * 86400000;
+      else monday -= (dow - 1) * 86400000;
+      const weeks = Math.floor((monday - origin) / (7 * 86400000));
+      return ((weeks % 2) + 2) % 2 === 0 ? "a" : "b";
+    }
+
+    function route() {
+      const hash = location.hash.replace("#", "").toUpperCase();
+      if (CLASSES[hash]) {
+        showClass(hash);
+        return;
+      }
+      const raw = location.hash.replace("#", "").toLowerCase();
+      if (raw === "a" || raw === "b") showWeek(raw);
+      else showWeek(currentWeekLetter());
+    }
+
+    document.getElementById("link-a").addEventListener("click", () => { week = "a"; });
+    document.getElementById("link-b").addEventListener("click", () => { week = "b"; });
+    window.addEventListener("hashchange", route);
+    window.addEventListener("keydown", e => {
+      if (e.key === "Escape" && !classPage.hidden) {
+        location.hash = week;
+      }
+    });
+
+    if (window.matchMedia("(max-width: 799px)").matches) {
+      const n = new Date().getDay();
+      dayFilter = n >= 1 && n <= 5 ? n : 0;
+    }
+    bodyFilter();
+    renderDays();
+    renderIndex();
+    const start = location.hash.replace("#", "").toLowerCase();
+    if (!start || start === "a" || start === "b") {
+      const want = currentWeekLetter();
+      if (start === want) route();
+      else location.hash = want;
+    } else {
+      route();
+    }
+  </script>
+</body>
+</html>
