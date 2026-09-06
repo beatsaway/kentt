@@ -328,6 +328,9 @@
     const meta = document.getElementById("meta");
     let week = "a";
     let dayFilter = 0;
+    let showPhotos = false;
+    let photoTyped = "";
+    let openClass = "";
 
     function isClass(code) {
       return Boolean(code && CLASSES[code]);
@@ -514,7 +517,7 @@
         const li = document.createElement("li");
         const num = document.createElement("b");
         num.textContent = s.n;
-        if (s.img) {
+        if (s.img && showPhotos) {
           const img = document.createElement("img");
           img.src = IMG + s.img;
           img.alt = code + " " + s.n;
@@ -527,12 +530,13 @@
         nick.type = "text";
         nick.autocomplete = "off";
         nick.spellcheck = false;
-        nick.value = nicks[nickKey(code, s.n)] || "";
+        nick.value = nicks[nickKey(code, s.n)] ?? s.nick ?? "";
         nick.addEventListener("input", () => saveNick(code, s.n, nick.value));
         li.append(num);
         li.append(nick);
         photos.append(li);
       });
+      openClass = code;
       document.getElementById("link-a").className = "";
       document.getElementById("link-b").className = "";
       window.scrollTo(0, 0);
@@ -586,6 +590,16 @@
     window.addEventListener("keydown", e => {
       if (e.key === "Escape" && !classPage.hidden) {
         location.hash = week;
+        return;
+      }
+      if (classPage.hidden) return;
+      if (e.target.closest("input, textarea")) return;
+      if (e.key.length !== 1) return;
+      photoTyped = (photoTyped + e.key.toLowerCase()).slice(-9);
+      if (photoTyped === "photoshow") {
+        showPhotos = !showPhotos;
+        photoTyped = "";
+        if (openClass) showClass(openClass);
       }
     });
 
