@@ -340,7 +340,7 @@
 <body>
   <header>
     <a href="#a" id="back" hidden title="Timetable">🕒</a>
-    <p><a id="head-title" href="https://docs.google.com/document/d/1iiptvZl5o9lI2E7PPfiTqL39MNSafXNklrajUkv0shw/edit?tab=t.0" target="_blank" rel="noopener">Mr Ken's timetable 2026/27</a> <span id="meta" hidden></span></p>
+    <p><a id="head-title" href="https://docs.google.com/document/d/1iiptvZl5o9lI2E7PPfiTqL39MNSafXNklrajUkv0shw/edit?tab=t.0" target="_blank" rel="noopener">🐢Mr Ken's timetable 2026/27</a> <span id="meta" hidden></span></p>
     <nav class="weeks" id="weeks" aria-label="Week">
       <a href="#a" id="link-a">Week A</a>
       <a href="#b" id="link-b">Week B</a>
@@ -746,7 +746,7 @@
       headTitle.href = DOC;
       headTitle.target = "_blank";
       headTitle.rel = "noopener";
-      headTitle.textContent = "Mr Ken's timetable 2026/27";
+      headTitle.textContent = "🐢Mr Ken's timetable 2026/27";
       meta.hidden = true;
       meta.textContent = "";
       document.getElementById("link-a").className = week === "a" ? "on" : "";
@@ -860,18 +860,18 @@
       const text = document.getElementById("hello-text");
       const time = document.getElementById("hello-time");
       if (current) {
-        text.textContent = "Good day Mr Ken, your " + current.kind + " will end in";
+        text.textContent = "Good day Mr Ken🐢, your " + current.kind + " will end in";
         time.hidden = false;
         time.textContent = clockText(current.end - now);
         return;
       }
       if (next) {
-        text.textContent = "Good day Mr Ken, your " + next.name + " will start in";
+        text.textContent = "Good day Mr Ken🐢, your " + next.name + " will start in";
         time.hidden = false;
         time.textContent = clockText(next.start - now);
         return;
       }
-      text.textContent = "Good day Mr Ken.";
+      text.textContent = "Good day Mr Ken🐢.";
       time.hidden = true;
       time.textContent = "";
     }
