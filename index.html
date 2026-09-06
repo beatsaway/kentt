@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Kenneth's timetable 2026/27</title>
+  <title>Mr Ken's timetable 2026/27</title>
   <style>
     :root {
       --ink: #161616;
@@ -159,7 +159,7 @@
       text-decoration: none;
       cursor: pointer;
     }
-    #class-page[hidden], main[hidden], .days[hidden], .classes[hidden], #weeks[hidden], #back[hidden] { display: none; }
+    #class-page[hidden], main[hidden], .days[hidden], .classes[hidden], #weeks[hidden], #back[hidden], #class-pick[hidden] { display: none; }
 
     #photos {
       display: grid;
@@ -241,10 +241,14 @@
 <body>
   <header>
     <a href="#a" id="back" hidden title="Timetable">🕒</a>
-    <p><a id="head-title" href="https://docs.google.com/document/d/1iiptvZl5o9lI2E7PPfiTqL39MNSafXNklrajUkv0shw/edit?tab=t.0" target="_blank" rel="noopener">Kenneth's timetable 2026/27</a> <span id="meta" hidden></span></p>
+    <p><a id="head-title" href="https://docs.google.com/document/d/1iiptvZl5o9lI2E7PPfiTqL39MNSafXNklrajUkv0shw/edit?tab=t.0" target="_blank" rel="noopener">Mr Ken's timetable 2026/27</a> <span id="meta" hidden></span></p>
     <nav class="weeks" id="weeks" aria-label="Week">
       <a href="#a" id="link-a">Week A</a>
       <a href="#b" id="link-b">Week B</a>
+    </nav>
+    <nav id="class-pick" hidden>
+      <a id="pick-list">Class list</a>
+      <a id="pick-room" hidden target="_blank" rel="noopener">Google Classroom</a>
     </nav>
   </header>
 
@@ -261,6 +265,15 @@
     const IMG = "images/";
     const DOC = "https://docs.google.com/document/d/1iiptvZl5o9lI2E7PPfiTqL39MNSafXNklrajUkv0shw/edit?tab=t.0";
     const LINKS = { "DEAR time": "https://dear-time.netlify.app/" };
+    const ROOMS = {
+      "7AJ": "https://classroom.google.com/u/8/c/ODc2NzUzODYyNjk3",
+      "9GK": "https://classroom.google.com/u/8/c/ODc3MjY0OTY3NDM2",
+      "7KS": "https://classroom.google.com/u/8/c/ODY5NDA2NDMxMjgw",
+      "9PS": "https://classroom.google.com/u/8/c/ODc3MjcwNDM5MTMx",
+      "8JE": "https://classroom.google.com/u/8/c/ODc3Mjc3MzAzOTc5",
+      "9SV": "https://classroom.google.com/u/8/c/ODc2NzMwMDM1MTM5",
+      "9KS": "https://classroom.google.com/u/8/c/ODY5MzUzNjkzNjYy"
+    };
     const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri"];
     const ROWS = [
       ["hr", "08:30–09:00", ""],
@@ -324,6 +337,9 @@
     const daysNav = document.getElementById("days");
     const back = document.getElementById("back");
     const weeksNav = document.getElementById("weeks");
+    const classPick = document.getElementById("class-pick");
+    const pickList = document.getElementById("pick-list");
+    const pickRoom = document.getElementById("pick-room");
     const headTitle = document.getElementById("head-title");
     const meta = document.getElementById("meta");
     let week = "a";
@@ -484,9 +500,36 @@
       localStorage.setItem("nicks", JSON.stringify(all));
     }
 
+    function setClassHead(code) {
+      board.hidden = true;
+      daysNav.hidden = true;
+      classIndex.hidden = true;
+      weeksNav.hidden = true;
+      back.hidden = false;
+      back.href = "#" + week;
+      classPick.hidden = false;
+      headTitle.removeAttribute("href");
+      headTitle.removeAttribute("target");
+      headTitle.textContent = code;
+      meta.hidden = false;
+      const cls = CLASSES[code];
+      meta.textContent = cls ? cls.when : "";
+      pickList.hidden = !cls;
+      pickList.href = "#" + code + "-list";
+      pickList.className = "";
+      if (ROOMS[code]) {
+        pickRoom.hidden = false;
+        pickRoom.href = ROOMS[code];
+      } else {
+        pickRoom.hidden = true;
+        pickRoom.removeAttribute("href");
+      }
+    }
+
     function renderIndex() {
       classIndex.replaceChildren();
-      Object.keys(CLASSES).sort((a, b) => a.localeCompare(b, undefined, { numeric: true })).forEach(code => {
+      const codes = [...new Set([...Object.keys(CLASSES), ...Object.keys(ROOMS)])];
+      codes.sort((a, b) => a.localeCompare(b, undefined, { numeric: true })).forEach(code => {
         const a = document.createElement("a");
         a.href = "#" + code;
         a.textContent = code;
@@ -494,20 +537,25 @@
       });
     }
 
+    function showPick(code) {
+      if (!CLASSES[code] && !ROOMS[code]) return showWeek(week);
+      showPhotos = false;
+      photoTyped = "";
+      openClass = "";
+      setClassHead(code);
+      classPage.hidden = true;
+      document.getElementById("photos").replaceChildren();
+      document.getElementById("link-a").className = "";
+      document.getElementById("link-b").className = "";
+      window.scrollTo(0, 0);
+    }
+
     function showClass(code) {
       const cls = CLASSES[code];
-      if (!cls) return showWeek(week);
-      board.hidden = true;
-      daysNav.hidden = true;
-      classIndex.hidden = true;
+      if (!cls) return showPick(code);
+      setClassHead(code);
+      pickList.className = "on";
       classPage.hidden = false;
-      weeksNav.hidden = true;
-      back.hidden = false;
-      back.href = "#" + week;
-      headTitle.removeAttribute("href");
-      headTitle.removeAttribute("target");
-      headTitle.textContent = code;
-      meta.hidden = false;
       const present = cls.students.filter(s => s.img).length;
       meta.textContent = cls.when + " · " + present + " students";
       const photos = document.getElementById("photos");
@@ -543,17 +591,21 @@
     }
 
     function showWeek(which) {
+      showPhotos = false;
+      photoTyped = "";
+      openClass = "";
       week = which === "b" ? "b" : "a";
       board.hidden = false;
       daysNav.hidden = false;
       classIndex.hidden = false;
       classPage.hidden = true;
+      classPick.hidden = true;
       weeksNav.hidden = false;
       back.hidden = true;
       headTitle.href = DOC;
       headTitle.target = "_blank";
       headTitle.rel = "noopener";
-      headTitle.textContent = "Kenneth's timetable 2026/27";
+      headTitle.textContent = "Mr Ken's timetable 2026/27";
       meta.hidden = true;
       meta.textContent = "";
       document.getElementById("link-a").className = week === "a" ? "on" : "";
@@ -574,12 +626,18 @@
     }
 
     function route() {
-      const hash = location.hash.replace("#", "").toUpperCase();
-      if (CLASSES[hash]) {
-        showClass(hash);
+      const rawHash = location.hash.replace("#", "");
+      const list = rawHash.match(/^([0-9][A-Z]{2})-list$/i);
+      if (list) {
+        showClass(list[1].toUpperCase());
         return;
       }
-      const raw = location.hash.replace("#", "").toLowerCase();
+      const code = rawHash.toUpperCase();
+      if (CLASSES[code] || ROOMS[code]) {
+        showPick(code);
+        return;
+      }
+      const raw = rawHash.toLowerCase();
       if (raw === "a" || raw === "b") showWeek(raw);
       else showWeek(currentWeekLetter());
     }
@@ -588,7 +646,7 @@
     document.getElementById("link-b").addEventListener("click", () => { week = "b"; });
     window.addEventListener("hashchange", route);
     window.addEventListener("keydown", e => {
-      if (e.key === "Escape" && !classPage.hidden) {
+      if (e.key === "Escape" && (!classPage.hidden || !classPick.hidden)) {
         location.hash = week;
         return;
       }
