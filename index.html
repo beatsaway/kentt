@@ -105,6 +105,11 @@
       left: 0;
       background: #fff;
     }
+    tbody th a {
+      color: inherit;
+      text-decoration: none;
+    }
+    tbody th a:hover, tbody th a:focus-visible { text-decoration: underline; }
     tbody th small {
       display: block;
       font-weight: 400;
@@ -375,11 +380,16 @@
       "Flag-raising": "https://us02web.zoom.us/j/83329409406?pwd=qWY6KmEgAW7ItCVKDzpYOW6OBbyHbw.1",
       "Homeroom Duty": "https://drive.google.com/drive/u/8/folders/1IL-Dg2WHjX6JIp1xWBltv4lxfreFMT-A"
     };
+    const PERIOD_SHEET = "https://docs.google.com/spreadsheets/d/1r_Evr8fo5pxsliaSprcCcsfhwC28wJZugr5oKvd1u4Y/edit?gid=809789743#gid=809789743";
+    const SLIDE_L0 = "https://docs.google.com/presentation/d/1nwUWduByxr4MRLeRhGfrLu1D0abYV-e3MIGsLVKTnCY/edit?usp=sharing";
+    const SLIDE_L1 = "https://docs.google.com/presentation/d/1Jpp_MY-O4TfeyFCYBbJOewvwzKFC0uu1t_CtXx46fKI/edit?slide=id.g3fa3b55f791_32_0#slide=id.g3fa3b55f791_32_0";
     const ROOMS = {
       "7AJ": "https://classroom.google.com/u/8/c/ODc2NzUzODYyNjk3",
       "9GK": "https://classroom.google.com/u/8/c/ODc3MjY0OTY3NDM2",
       "7KS": "https://classroom.google.com/u/8/c/ODY5NDA2NDMxMjgw",
       "9PS": "https://classroom.google.com/u/8/c/ODc3MjcwNDM5MTMx",
+      "8CW": "https://classroom.google.com/u/8/c/ODc3OTcxMjM1MzA1",
+      "8EJ": "https://classroom.google.com/u/8/c/ODc3OTc3MDIyMDUw",
       "8JE": "https://classroom.google.com/u/8/c/ODc3Mjc3MzAzOTc5",
       "9SV": "https://classroom.google.com/u/8/c/ODc2NzMwMDM1MTM5",
       "9KS": "https://classroom.google.com/u/8/c/ODY5MzUzNjkzNjYy"
@@ -506,6 +516,22 @@
         a.textContent = "ClassList";
         inner.append(a);
       }
+      if (/^7[A-Z]{2}$/.test(code)) {
+        const a = document.createElement("a");
+        a.href = SLIDE_L1;
+        a.target = "_blank";
+        a.rel = "noopener";
+        a.textContent = "Slide L1";
+        inner.append(a);
+      }
+      if (/^8[A-Z]{2}$/.test(code)) {
+        const a = document.createElement("a");
+        a.href = SLIDE_L0;
+        a.target = "_blank";
+        a.rel = "noopener";
+        a.textContent = "Slide L0";
+        inner.append(a);
+      }
       if (ROOMS[code]) {
         const a = document.createElement("a");
         a.href = ROOMS[code];
@@ -585,12 +611,17 @@
         if (id === nowRow) tr.classList.add("now");
         const th = document.createElement("th");
         th.scope = "row";
-        th.append(label);
+        const period = document.createElement("a");
+        period.href = PERIOD_SHEET;
+        period.target = "_blank";
+        period.rel = "noopener";
+        period.append(label);
         if (time) {
           const t = document.createElement("small");
           t.textContent = time;
-          th.append(t);
+          period.append(t);
         }
+        th.append(period);
         tr.append(th);
         codes.forEach((code, i) => {
           if (week === "a" && id === "lunch" && i === 2) return;
