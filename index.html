@@ -105,11 +105,11 @@
       left: 0;
       background: #fff;
     }
-    tbody th a {
+    th a {
       color: inherit;
       text-decoration: none;
     }
-    tbody th a:hover, tbody th a:focus-visible { text-decoration: underline; }
+    th a:hover, th a:focus-visible { text-decoration: underline; }
     tbody th small {
       display: block;
       font-weight: 400;
@@ -380,7 +380,7 @@
       "Flag-raising": "https://us02web.zoom.us/j/83329409406?pwd=qWY6KmEgAW7ItCVKDzpYOW6OBbyHbw.1",
       "Homeroom Duty": "https://drive.google.com/drive/u/8/folders/1IL-Dg2WHjX6JIp1xWBltv4lxfreFMT-A"
     };
-    const PERIOD_SHEET = "https://docs.google.com/spreadsheets/d/1r_Evr8fo5pxsliaSprcCcsfhwC28wJZugr5oKvd1u4Y/edit?gid=809789743#gid=809789743";
+    const PERIOD_SHEET = "https://docs.google.com/spreadsheets/d/1r_Evr8fo5pxsliaSprcCcsfhwC28wJZugr5oKvd1u4Y/edit?gid=1185093567#gid=1185093567";
     const SLIDE_L0 = "https://docs.google.com/presentation/d/1nwUWduByxr4MRLeRhGfrLu1D0abYV-e3MIGsLVKTnCY/edit?usp=sharing";
     const SLIDE_L1 = "https://docs.google.com/presentation/d/1Jpp_MY-O4TfeyFCYBbJOewvwzKFC0uu1t_CtXx46fKI/edit?slide=id.g3fa3b55f791_32_0#slide=id.g3fa3b55f791_32_0";
     const ROOMS = {
@@ -593,7 +593,7 @@
       const data = WEEK[week];
       const nowRow = periodKey();
       const today = new Date().getDay();
-      let html = "<table><thead><tr><th scope='col'>Period</th>";
+      let html = "<table><thead><tr><th scope='col'><a href='" + PERIOD_SHEET + "' target='_blank' rel='noopener'>Period</a></th>";
       DAYS.forEach((d, i) => {
         const mark = today === i + 1 ? " on" : "";
         html += "<th scope='col' class='d" + (i + 1) + mark + "'>" + d + "</th>";
