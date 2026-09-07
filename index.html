@@ -45,6 +45,8 @@
       color: var(--ink);
       font-weight: 650;
       text-decoration: none;
+      -webkit-touch-callout: none;
+      user-select: none;
     }
     #head-title[href]:hover, a.note:hover { text-decoration: underline; }
     a.note { color: inherit; text-decoration: none; }
@@ -415,18 +417,18 @@
       a: {
         hr:    ["Homeroom Duty", "Homeroom Duty", "Homeroom Duty", "Homeroom Duty", "Homeroom Duty"],
         hrNote:["", "DEAR time", "", "", "Flag-raising"],
-        l1:    ["8EJ", "8CW", "", "", "7NS"],
-        l2:    ["7KS", "", "", "", "5MA"],
+        l1:    ["8EJ", "8CW", "8AE", "", "7NS"],
+        l2:    ["7KS", "", "8AE", "5JA", "5MA"],
         l3:    ["8CW", "", "", "9RR", "5MA"],
         rec:   ["", "", "", "", ""],
         l4:    ["6SR", "6YS", "", "", ""],
-        l5:    ["6SR", "6YS", "7/F Duty", "", ""],
+        l5:    ["6SR", "6YS", "7/F Duty", "9KS", ""],
         l5Note:["", "", "12:15–12:45", "", ""],
         lunch: ["", "", "", "", ""],
         lrec:  ["", "", "", "", ""],
         l6:    ["9GK", "", "", "8AJ", "8AJ"],
-        l7:    ["", "7NR", "Homeroom Duty", "7AL", ""],
-        l8:    ["9SV", "9RR", "", "", ""],
+        l7:    ["", "7NR", "Homeroom Duty", "7AL", "4NR"],
+        l8:    ["9SV", "9RR", "", "", "4NR"],
         l8Note:["", "", "Early release / CCA", "", ""],
         end:   ["Homeroom Duty", "Homeroom Duty", "", "Homeroom Duty", "Homeroom Duty"],
         late:  ["", "", "", "", "New Wing Duty"],
@@ -437,16 +439,16 @@
         hrNote:["", "DEAR time", "", "", "Flag-raising"],
         l1:    ["", "", "", "", "8JE"],
         l1Note:["", "", "", "Chapel", ""],
-        l2:    ["", "", "", "", ""],
-        l3:    ["7AL", "9SV", "", "", ""],
+        l2:    ["", "", "", "7NS", ""],
+        l3:    ["7AL", "9SV", "", "", "7KS"],
         rec:   ["", "", "", "", ""],
-        l4:    ["9PS", "", "", "8JE", "4IR"],
+        l4:    ["9PS", "9KS", "", "8JE", "4IR"],
         l5:    ["7NR", "", "", "", "4IR"],
         lunch: ["Astro Turf Duty", "", "", "", "7/F Duty"],
         lrec:  ["", "", "", "", ""],
         l6:    ["7AJ", "", "", "9PS", ""],
-        l7:    ["", "", "Homeroom Duty", "", ""],
-        l8:    ["8EJ", "7AJ", "", "9GK", ""],
+        l7:    ["4KJ", "5DH", "Homeroom Duty", "", "4SA"],
+        l8:    ["8EJ", "7AJ", "", "9GK", "4SA"],
         l8Note:["", "", "Early release / CCA", "", ""],
         end:   ["Homeroom Duty", "Homeroom Duty", "", "Homeroom Duty", "Homeroom Duty"],
         late:  ["", "", "", "", ""]
@@ -466,11 +468,11 @@
     let week = "a";
     let dayFilter = 0;
     let showPhotos = false;
-    let photoTyped = "";
+    let photoHold = 0;
     let openClass = "";
 
     function isClass(code) {
-      return Boolean(code && CLASSES[code]);
+      return Boolean(code && (CLASSES[code] || /^[4-9][A-Z]{2}$/.test(code)));
     }
 
     function periodKey() {
@@ -540,14 +542,18 @@
         a.textContent = "GoogleClassroom";
         inner.append(a);
       }
-      pick.append(inner);
       trigger.addEventListener("click", e => {
         e.stopPropagation();
+        if (!inner.childNodes.length) return;
         const open = host.classList.contains("open");
         closePicks();
         if (!open) host.classList.add("open");
       });
-      host.append(trigger, pick);
+      host.append(trigger);
+      if (inner.childNodes.length) {
+        pick.append(inner);
+        host.append(pick);
+      }
     }
 
     function cell(code, note) {
@@ -764,7 +770,6 @@
 
     function showWeek(which) {
       showPhotos = false;
-      photoTyped = "";
       openClass = "";
       week = which === "b" ? "b" : "a";
       board.hidden = false;
@@ -803,7 +808,7 @@
     function eventKind(code) {
       if (!code) return "";
       if (/duty/i.test(code)) return "duty";
-      if (CLASSES[code] || ROOMS[code]) return "lesson";
+      if (isClass(code) || ROOMS[code]) return "lesson";
       return "";
     }
 
@@ -953,15 +958,29 @@
         location.hash = week;
         return;
       }
-      if (classPage.hidden) return;
-      if (e.target.closest("input, textarea")) return;
-      if (e.key.length !== 1) return;
-      photoTyped = (photoTyped + e.key.toLowerCase()).slice(-9);
-      if (photoTyped === "photoshow") {
-        showPhotos = !showPhotos;
-        photoTyped = "";
-        if (openClass) showClass(openClass);
+    });
+
+    function clearPhotoHold() {
+      if (photoHold) {
+        clearTimeout(photoHold);
+        photoHold = 0;
       }
+    }
+    headTitle.addEventListener("pointerdown", e => {
+      if (classPage.hidden || !openClass) return;
+      if (e.button) return;
+      clearPhotoHold();
+      photoHold = setTimeout(() => {
+        photoHold = 0;
+        showPhotos = !showPhotos;
+        showClass(openClass);
+      }, 3000);
+    });
+    headTitle.addEventListener("pointerup", clearPhotoHold);
+    headTitle.addEventListener("pointercancel", clearPhotoHold);
+    headTitle.addEventListener("pointerleave", clearPhotoHold);
+    headTitle.addEventListener("contextmenu", e => {
+      if (!classPage.hidden) e.preventDefault();
     });
 
     if (window.matchMedia("(max-width: 799px)").matches) {
