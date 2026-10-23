@@ -424,7 +424,7 @@
         l4:    ["6SR", "6YS", "", "", ""],
         l5:    ["6SR", "6YS", "7/F Duty", "9KS", ""],
         l5Note:["", "", "12:15–12:45", "", ""],
-        lunch: ["", "", "", "", ""],
+        lunch: ["", "", "", "", "Canteen Duty"],
         lrec:  ["", "", "", "", ""],
         l6:    ["9GK", "", "", "8AJ", "8AJ"],
         l7:    ["", "7NR", "Homeroom Duty", "7AL", "4NR"],
@@ -444,7 +444,7 @@
         rec:   ["", "", "", "", ""],
         l4:    ["9PS", "9KS", "", "8JE", "4IR"],
         l5:    ["7NR", "", "", "", "4IR"],
-        lunch: ["Astro Turf Duty", "", "", "", "7/F Duty"],
+        lunch: ["", "", "", "", "7/F Duty"],
         lrec:  ["", "", "", "", ""],
         l6:    ["7AJ", "", "", "9PS", ""],
         l7:    ["4KJ", "5DH", "Homeroom Duty", "", "4SA"],
@@ -926,7 +926,7 @@
     }
 
     function route() {
-      const rawHash = location.hash.replace("#", "");
+      const rawHash = location.hash.replace("#", "").toLowerCase();
       const list = rawHash.match(/^([0-9][A-Z]{2})-list$/i);
       if (list) {
         showClass(list[1].toUpperCase());
