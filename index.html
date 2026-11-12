@@ -53,6 +53,28 @@
     #meta { font-size: 12px; color: var(--muted); }
     #meta[hidden] { display: none; }
 
+    #ask-btn {
+      appearance: none;
+      width: 24px;
+      height: 24px;
+      padding: 0;
+      border: 1px solid var(--ink);
+      border-radius: 999px;
+      background: #fff;
+      color: var(--ink);
+      font: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1;
+      cursor: pointer;
+      flex: 0 0 auto;
+      transition: background 0.2s ease, color 0.2s ease;
+    }
+    #ask-btn:hover, #ask-btn:focus-visible {
+      background: var(--ink);
+      color: #fff;
+    }
+
     nav { display: flex; flex-wrap: wrap; gap: 6px; }
     header nav { flex: 0 0 auto; }
     nav a, nav button {
@@ -227,9 +249,9 @@
       text-decoration: none;
       cursor: pointer;
     }
-    #class-page[hidden], main[hidden], .days[hidden], .classes[hidden], #weeks[hidden], #back[hidden], #class-pick[hidden], #hello[hidden] { display: none; }
+    #class-page[hidden], main[hidden], .days[hidden], .classes[hidden], #weeks[hidden], #back[hidden], #class-pick[hidden], #hello[hidden], #ask-modal[hidden] { display: none; }
 
-    #hello {
+    #hello, #ask-modal {
       position: fixed;
       inset: 0;
       z-index: 10;
@@ -239,7 +261,8 @@
       padding: 20px;
       background: rgba(255, 255, 255, 0.72);
     }
-    #hello div {
+    #hello div, #ask-modal > div {
+      width: 100%;
       max-width: 22em;
       padding: 16px 16px 12px;
       background: #fff;
@@ -255,7 +278,7 @@
       line-height: 1.2;
     }
     #hello-time[hidden] { display: none; }
-    #hello button {
+    #hello button, #ask-modal button {
       appearance: none;
       border: 1px solid var(--ink);
       background: var(--ink);
@@ -265,6 +288,70 @@
       font: inherit;
       font-size: 13px;
       cursor: pointer;
+    }
+    #ask-modal button.ghost {
+      background: #fff;
+      color: var(--ink);
+    }
+
+    .ask-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      font-weight: 650;
+    }
+    .ask-fields {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .ask-fields label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 3px;
+    }
+    .ask-fields input {
+      width: 100%;
+      padding: 5px 8px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      font: inherit;
+      font-size: 13px;
+      font-variant-numeric: tabular-nums;
+      color: var(--ink);
+      background: #fff;
+    }
+    .ask-fields input:focus {
+      outline: none;
+      border-color: var(--ink);
+    }
+    #ask-result {
+      margin: 0 0 12px;
+      padding: 8px 10px;
+      background: var(--wash);
+      border-radius: 6px;
+      font-size: 13px;
+    }
+    #ask-result strong {
+      display: block;
+      font-size: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    #ask-result span {
+      display: block;
+      margin-top: 2px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .ask-actions {
+      display: flex;
+      gap: 6px;
+      justify-content: flex-end;
     }
 
     #photos {
@@ -346,6 +433,7 @@
 </head>
 <body>
   <header>
+    <button type="button" id="ask-btn" title="Check what Mr Ken is doing" aria-label="Check what Mr Ken is doing">?</button>
     <a href="#a" id="back" hidden title="Timetable">🕒</a>
     <p><a id="head-title" href="https://docs.google.com/document/d/1iiptvZl5o9lI2E7PPfiTqL39MNSafXNklrajUkv0shw/edit?tab=t.0" target="_blank" rel="noopener">🐢Mr Ken's timetable 2026/27</a> <span id="meta" hidden></span></p>
     <nav class="weeks" id="weeks" aria-label="Week">
@@ -370,6 +458,27 @@
       <p id="hello-text"></p>
       <p id="hello-time" hidden></p>
       <button type="button" id="hello-ok">OK</button>
+    </div>
+  </div>
+
+  <div id="ask-modal" hidden>
+    <div>
+      <div class="ask-head">What is Mr Ken doing?</div>
+      <div class="ask-fields">
+        <div>
+          <label for="ask-date">Date (yyyy/mm/dd)</label>
+          <input type="text" id="ask-date" placeholder="2026/09/07" inputmode="numeric" maxlength="10">
+        </div>
+        <div>
+          <label for="ask-time">Time (00:00–23:59)</label>
+          <input type="time" id="ask-time" value="14:20" step="60">
+        </div>
+      </div>
+      <div id="ask-result"></div>
+      <div class="ask-actions">
+        <button type="button" class="ghost" id="ask-close">Close</button>
+        <button type="button" id="ask-check">Check</button>
+      </div>
     </div>
   </div>
 
@@ -472,7 +581,7 @@
     let openClass = "";
 
     function isClass(code) {
-      return Boolean(code && (CLASSES[code] || /^[4-9][A-Z]{2}$/.test(code)));
+      return Boolean(code && ((typeof CLASSES !== "undefined" && CLASSES[code]) || /^[4-9][A-Z]{2}$/.test(code)));
     }
 
     function periodKey() {
@@ -512,7 +621,7 @@
       pick.className = "pick";
       const inner = document.createElement("div");
       inner.className = "pick-in";
-      if (CLASSES[code]) {
+      if (typeof CLASSES !== "undefined" && CLASSES[code]) {
         const a = document.createElement("a");
         a.href = "#" + code + "-list";
         a.textContent = "ClassList";
@@ -704,7 +813,7 @@
       headTitle.removeAttribute("target");
       headTitle.textContent = code;
       meta.hidden = false;
-      const cls = CLASSES[code];
+      const cls = typeof CLASSES !== "undefined" ? CLASSES[code] : null;
       meta.textContent = cls ? cls.when : "";
       if (ROOMS[code]) {
         pickRoom.hidden = false;
@@ -717,7 +826,8 @@
 
     function renderIndex() {
       classIndex.replaceChildren();
-      const codes = [...new Set([...Object.keys(CLASSES), ...Object.keys(ROOMS)])];
+      const clsKeys = typeof CLASSES !== "undefined" ? Object.keys(CLASSES) : [];
+      const codes = [...new Set([...clsKeys, ...Object.keys(ROOMS)])];
       codes.sort((a, b) => a.localeCompare(b, undefined, { numeric: true })).forEach(code => {
         const chip = document.createElement("span");
         chip.className = "chip";
@@ -730,7 +840,7 @@
     }
 
     function showClass(code) {
-      const cls = CLASSES[code];
+      const cls = typeof CLASSES !== "undefined" ? CLASSES[code] : null;
       if (!cls) return showWeek(week);
       setClassHead(code);
       classPage.hidden = false;
@@ -925,6 +1035,95 @@
       helloTick = setInterval(paintHello, 1000);
     }
 
+    // --- Ask modal ("?" top-left lookup) ---
+    const askModal = document.getElementById("ask-modal");
+    const askDate = document.getElementById("ask-date");
+    const askTime = document.getElementById("ask-time");
+    const askResult = document.getElementById("ask-result");
+
+    function formatYMD(d) {
+      const pad = n => String(n).padStart(2, "0");
+      return d.getFullYear() + "/" + pad(d.getMonth() + 1) + "/" + pad(d.getDate());
+    }
+
+    function parseYMD(str) {
+      const m = String(str || "").trim().match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/);
+      if (!m) return null;
+      const y = Number(m[1]), mo = Number(m[2]), d = Number(m[3]);
+      const dt = new Date(y, mo - 1, d);
+      if (dt.getFullYear() !== y || dt.getMonth() !== mo - 1 || dt.getDate() !== d) return null;
+      return dt;
+    }
+
+    function formatHM(dt) {
+      const pad = n => String(n).padStart(2, "0");
+      return pad(dt.getHours()) + ":" + pad(dt.getMinutes());
+    }
+
+    function runAskCheck() {
+      const dt = parseYMD(askDate.value);
+      const tm = String(askTime.value || "").match(/^(\d{1,2}):(\d{2})$/);
+      if (!dt) {
+        askResult.innerHTML = "<strong>Invalid date</strong><span>Use yyyy/mm/dd format (e.g. 2026/09/07).</span>";
+        return;
+      }
+      if (!tm) {
+        askResult.innerHTML = "<strong>Invalid time</strong><span>Select a valid 24-hour time (e.g. 14:20).</span>";
+        return;
+      }
+      const hh = Number(tm[1]), mm = Number(tm[2]);
+      const target = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate(), hh, mm, 0, 0);
+      const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+      const dayLabel = dayNames[target.getDay()];
+      const wkLabel = "Week " + weekLetterFor(target).toUpperCase();
+
+      const evs = eventsOn(target);
+      const match = evs.find(ev => target >= ev.start && target < ev.end);
+
+      if (match) {
+        askResult.innerHTML =
+          "<strong>" + match.kind + " (" + match.name + ")</strong>" +
+          "<span>" + dayLabel + " · " + wkLabel + " · " + formatHM(match.start) + "–" + formatHM(match.end) + "</span>";
+      } else {
+        askResult.innerHTML =
+          "<strong>nothing</strong>" +
+          "<span>" + dayLabel + " · " + wkLabel + " · Free at " + formatHM(target) + "</span>";
+      }
+    }
+
+    function openAskModal() {
+      hideHello();
+      const now = new Date();
+      if (!askDate.value) askDate.value = formatYMD(now);
+      runAskCheck();
+      askModal.hidden = false;
+      askDate.focus();
+      askDate.select();
+    }
+
+    function closeAskModal() {
+      askModal.hidden = true;
+    }
+
+    // Auto-insert slashes as user types yyyy/mm/dd
+    askDate.addEventListener("input", e => {
+      if (e.inputType && e.inputType.startsWith("delete")) return;
+      const digits = askDate.value.replace(/\D/g, "").slice(0, 8);
+      if (digits.length > 6) askDate.value = digits.slice(0, 4) + "/" + digits.slice(4, 6) + "/" + digits.slice(6);
+      else if (digits.length > 4) askDate.value = digits.slice(0, 4) + "/" + digits.slice(4);
+      else askDate.value = digits;
+    });
+    askDate.addEventListener("keydown", e => { if (e.key === "Enter") runAskCheck(); });
+    askTime.addEventListener("keydown", e => { if (e.key === "Enter") runAskCheck(); });
+    askTime.addEventListener("change", runAskCheck);
+
+    document.getElementById("ask-btn").addEventListener("click", openAskModal);
+    document.getElementById("ask-close").addEventListener("click", closeAskModal);
+    document.getElementById("ask-check").addEventListener("click", runAskCheck);
+    askModal.addEventListener("click", e => {
+      if (e.target.id === "ask-modal") closeAskModal();
+    });
+
     function route() {
       const rawHash = location.hash.replace("#", "").toLowerCase();
       const list = rawHash.match(/^([0-9][A-Z]{2})-list$/i);
@@ -946,6 +1145,10 @@
     document.addEventListener("click", () => closePicks());
     window.addEventListener("hashchange", route);
     window.addEventListener("keydown", e => {
+      if (e.key === "Escape" && !askModal.hidden) {
+        closeAskModal();
+        return;
+      }
       if (e.key === "Escape" && !document.getElementById("hello").hidden) {
         hideHello();
         return;
